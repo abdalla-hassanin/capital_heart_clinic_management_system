@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "121367250826",
+    "project_id": "capital-heart-clinic-tes-dc631",
+    "storage_bucket": "capital-heart-clinic-tes-dc631.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:121367250826:android:13797cb61883c7114cea73",
+        "android_client_info": {
+          "package_name": "com.premiumsoftwaretech.capital_heart_clinic_management_system"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_lYBEDxdLaOeDJ6lM6cJgTqc0UjYTKs0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
