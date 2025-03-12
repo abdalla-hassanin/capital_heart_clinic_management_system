@@ -1,11 +1,11 @@
 class Education {
   final String degree;
   final String institution;
-  final String year;
+  final DateTime? completionDate;
 
   Education({
     required this.degree,
     required this.institution,
-    required this.year,
+    this.completionDate,
   });
 }

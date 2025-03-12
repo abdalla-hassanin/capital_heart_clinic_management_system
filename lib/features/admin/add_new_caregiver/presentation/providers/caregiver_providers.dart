@@ -1,11 +1,14 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import '../../../../../core/utils/firebase_end_points.dart';
 import '../../data/services/firebase_service.dart';
 import '../../data/repositories/caregiver_repository_impl.dart';
 import '../../domain/entities/caregiver.dart';
 import '../../domain/entities/work_history.dart';
 import '../../domain/entities/education.dart';
 import '../../domain/entities/certification.dart';
+import '../../domain/entities/training.dart';
 import '../../domain/entities/reference.dart';
 import '../../domain/repositories/caregiver_repository.dart';
 import '../../domain/usecases/add_caregiver.dart';
@@ -55,14 +58,21 @@ final caregiverByIdProvider = StreamProvider.family<Caregiver?, String>((ref, id
 
 // Caregiver Form State
 class CaregiverFormState {
-  final String fullName;
+  final String firstName;
+  final String lastName;
   final String email;
   final String phone;
+  final String city;
+  final String country;
   final String address;
   final String professionalSummary;
+  final File? imageFile;
+  final Uint8List? imageBytes;
+  final String imageUrl;
   final List<WorkHistory> workHistory;
   final List<Education> education;
   final List<Certification> certifications;
+  final List<Training> trainings;
   final List<Reference> references;
   final List<String> softSkills;
   final List<String> hardSkills;
@@ -74,16 +84,26 @@ class CaregiverFormState {
   final String achievements;
   final bool isLoading;
   final String? error;
+  final DateTime? birthdate;
+  final String gender;
+  final String maritalStatus;
 
   CaregiverFormState({
-    this.fullName = '',
+    this.firstName = '',
+    this.lastName = '',
     this.email = '',
     this.phone = '',
+    this.city = '',
+    this.country = '',
     this.address = '',
     this.professionalSummary = '',
+    this.imageFile,
+    this.imageBytes,
+    this.imageUrl = '',
     List<WorkHistory>? workHistory,
     List<Education>? education,
     List<Certification>? certifications,
+    List<Training>? trainings,
     List<Reference>? references,
     List<String>? softSkills,
     List<String>? hardSkills,
@@ -95,22 +115,90 @@ class CaregiverFormState {
     this.achievements = '',
     this.isLoading = false,
     this.error,
-  })  : workHistory = workHistory ?? [WorkHistory(jobTitle: '', employer: '', startYear: '', endYear: '', responsibilities: '')],
-        education = education ?? [Education(degree: '', institution: '', year: '')],
-        certifications = certifications ?? [Certification(name: '', issuer: '', issueDate: '', expiryDate: '')],
-        references = references ?? [Reference(name: '', relationship: '', contactInfo: '', testimonial: '')],
+    this.birthdate,
+    this.gender = '',
+    this.maritalStatus = '',
+  })  : workHistory = workHistory ??
+      [
+        WorkHistory(
+          jobTitle: '',
+          employer: '',
+          startDate: null,
+          endDate: null,
+          responsibilities: '',
+        )
+      ],
+        education = education ??
+            [
+              Education(
+                degree: '',
+                institution: '',
+                completionDate: null,
+              )
+            ],
+        certifications = certifications ??
+            [
+              Certification(
+                name: '',
+                issuer: '',
+                issueDate: null,
+                expiryDate: null,
+                imageUrl: '',
+                imageFile: null,
+                imageBytes: null,
+              )
+            ],
+        trainings = trainings ??
+            [
+              Training(
+                name: '',
+                issuer: '',
+                issueDate: null,
+                expiryDate: null,
+                imageUrl: '',
+                imageFile: null,
+                imageBytes: null,
+              )
+            ],
+        references = references ??
+            [
+              Reference(
+                name: '',
+                relationship: '',
+                contactInfo: '',
+                testimonial: '',
+              )
+            ],
         softSkills = softSkills ?? [],
         hardSkills = hardSkills ?? [];
 
+  int? get age {
+    if (birthdate == null) return null;
+    final today = DateTime.now();
+    int age = today.year - birthdate!.year;
+    if (today.month < birthdate!.month ||
+        (today.month == birthdate!.month && today.day < birthdate!.day)) {
+      age--;
+    }
+    return age;
+  }
+
   CaregiverFormState copyWith({
-    String? fullName,
+    String? firstName,
+    String? lastName,
     String? email,
     String? phone,
+    String? city,
+    String? country,
     String? address,
     String? professionalSummary,
+    File? imageFile,
+    Uint8List? imageBytes,
+    String? imageUrl,
     List<WorkHistory>? workHistory,
     List<Education>? education,
     List<Certification>? certifications,
+    List<Training>? trainings,
     List<Reference>? references,
     List<String>? softSkills,
     List<String>? hardSkills,
@@ -122,16 +210,26 @@ class CaregiverFormState {
     String? achievements,
     bool? isLoading,
     String? error,
+    DateTime? birthdate,
+    String? gender,
+    String? maritalStatus,
   }) {
     return CaregiverFormState(
-      fullName: fullName ?? this.fullName,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
       email: email ?? this.email,
       phone: phone ?? this.phone,
+      city: city ?? this.city,
+      country: country ?? this.country,
       address: address ?? this.address,
       professionalSummary: professionalSummary ?? this.professionalSummary,
+      imageFile: imageFile ?? this.imageFile,
+      imageBytes: imageBytes ?? this.imageBytes,
+      imageUrl: imageUrl ?? this.imageUrl,
       workHistory: workHistory ?? this.workHistory,
       education: education ?? this.education,
       certifications: certifications ?? this.certifications,
+      trainings: trainings ?? this.trainings,
       references: references ?? this.references,
       softSkills: softSkills ?? this.softSkills,
       hardSkills: hardSkills ?? this.hardSkills,
@@ -143,20 +241,28 @@ class CaregiverFormState {
       achievements: achievements ?? this.achievements,
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
+      birthdate: birthdate ?? this.birthdate,
+      gender: gender ?? this.gender,
+      maritalStatus: maritalStatus ?? this.maritalStatus,
     );
   }
 
   Caregiver toModel({String id = ''}) {
     return Caregiver(
       id: id,
-      fullName: fullName,
+      firstName: firstName,
+      lastName: lastName,
       email: email,
       phone: phone,
+      city: city,
+      country: country,
       address: address,
       professionalSummary: professionalSummary,
+      imageUrl: imageUrl,
       workHistory: workHistory,
       education: education,
       certifications: certifications,
+      trainings: trainings,
       references: references,
       softSkills: softSkills,
       hardSkills: hardSkills,
@@ -167,6 +273,9 @@ class CaregiverFormState {
       memberships: memberships,
       achievements: achievements,
       createdAt: DateTime.now(),
+      birthdate: birthdate,
+      gender: gender,
+      maritalStatus: maritalStatus,
     );
   }
 }
@@ -174,36 +283,78 @@ class CaregiverFormState {
 class CaregiverFormNotifier extends StateNotifier<CaregiverFormState> {
   final AddCaregiver _addCaregiver;
   final UpdateCaregiver _updateCaregiver;
+  final FirebaseService _firebaseService;
 
-  CaregiverFormNotifier(this._addCaregiver, this._updateCaregiver) : super(CaregiverFormState());
+  CaregiverFormNotifier(this._addCaregiver, this._updateCaregiver, this._firebaseService)
+      : super(CaregiverFormState());
 
   void updatePersonalInfo({
-    String? fullName,
+    String? firstName,
+    String? lastName,
     String? email,
     String? phone,
+    String? city,
+    String? country,
     String? address,
     String? professionalSummary,
+    File? imageFile,
+    Uint8List? imageBytes,
   }) {
     state = state.copyWith(
-      fullName: fullName ?? state.fullName,
+      firstName: firstName ?? state.firstName,
+      lastName: lastName ?? state.lastName,
       email: email ?? state.email,
       phone: phone ?? state.phone,
+      city: city ?? state.city,
+      country: country ?? state.country,
       address: address ?? state.address,
       professionalSummary: professionalSummary ?? state.professionalSummary,
+      imageFile: imageFile ?? state.imageFile,
+      imageBytes: imageBytes ?? state.imageBytes,
     );
+  }
+
+  void updateBirthdate(DateTime? birthdate) {
+    state = state.copyWith(
+        birthdate: birthdate != null ? DateTime(birthdate.year, birthdate.month, birthdate.day) : null);
+  }
+
+  void updateGender(String gender) {
+    state = state.copyWith(gender: gender);
+  }
+
+  void updateMaritalStatus(String maritalStatus) {
+    state = state.copyWith(maritalStatus: maritalStatus);
   }
 
   void updateWorkHistory(int index, WorkHistory workHistory) {
     final updatedWorkHistory = List<WorkHistory>.from(state.workHistory);
     if (index < updatedWorkHistory.length) {
-      updatedWorkHistory[index] = workHistory;
+      updatedWorkHistory[index] = WorkHistory(
+        jobTitle: workHistory.jobTitle,
+        employer: workHistory.employer,
+        startDate: workHistory.startDate != null
+            ? DateTime(workHistory.startDate!.year, workHistory.startDate!.month,
+            workHistory.startDate!.day)
+            : null,
+        endDate: workHistory.endDate != null
+            ? DateTime(workHistory.endDate!.year, workHistory.endDate!.month,
+            workHistory.endDate!.day)
+            : null,
+        responsibilities: workHistory.responsibilities,
+      );
       state = state.copyWith(workHistory: updatedWorkHistory);
     }
   }
 
   void addWorkHistory() {
     final updatedWorkHistory = List<WorkHistory>.from(state.workHistory)
-      ..add(WorkHistory(jobTitle: '', employer: '', startYear: '', endYear: '', responsibilities: ''));
+      ..add(WorkHistory(
+          jobTitle: '',
+          employer: '',
+          startDate: null,
+          endDate: null,
+          responsibilities: ''));
     state = state.copyWith(workHistory: updatedWorkHistory);
   }
 
@@ -217,14 +368,21 @@ class CaregiverFormNotifier extends StateNotifier<CaregiverFormState> {
   void updateEducation(int index, Education education) {
     final updatedEducation = List<Education>.from(state.education);
     if (index < updatedEducation.length) {
-      updatedEducation[index] = education;
+      updatedEducation[index] = Education(
+        degree: education.degree,
+        institution: education.institution,
+        completionDate: education.completionDate != null
+            ? DateTime(education.completionDate!.year, education.completionDate!.month,
+            education.completionDate!.day)
+            : null,
+      );
       state = state.copyWith(education: updatedEducation);
     }
   }
 
   void addEducation() {
     final updatedEducation = List<Education>.from(state.education)
-      ..add(Education(degree: '', institution: '', year: ''));
+      ..add(Education(degree: '', institution: '', completionDate: null));
     state = state.copyWith(education: updatedEducation);
   }
 
@@ -235,17 +393,38 @@ class CaregiverFormNotifier extends StateNotifier<CaregiverFormState> {
     }
   }
 
-  void updateCertification(int index, Certification certification) {
+  void updateCertification(int index, Certification certification, {File? imageFile, Uint8List? imageBytes}) {
     final updatedCertifications = List<Certification>.from(state.certifications);
     if (index < updatedCertifications.length) {
-      updatedCertifications[index] = certification;
+      updatedCertifications[index] = Certification(
+        name: certification.name,
+        issuer: certification.issuer,
+        issueDate: certification.issueDate != null
+            ? DateTime(certification.issueDate!.year, certification.issueDate!.month,
+            certification.issueDate!.day)
+            : null,
+        expiryDate: certification.expiryDate != null
+            ? DateTime(certification.expiryDate!.year, certification.expiryDate!.month,
+            certification.expiryDate!.day)
+            : null,
+        imageUrl: certification.imageUrl,
+        imageFile: imageFile ?? certification.imageFile,
+        imageBytes: imageBytes ?? certification.imageBytes,
+      );
       state = state.copyWith(certifications: updatedCertifications);
     }
   }
 
   void addCertification() {
     final updatedCertifications = List<Certification>.from(state.certifications)
-      ..add(Certification(name: '', issuer: '', issueDate: '', expiryDate: ''));
+      ..add(Certification(
+          name: '',
+          issuer: '',
+          issueDate: null,
+          expiryDate: null,
+          imageUrl: '',
+          imageFile: null,
+          imageBytes: null));
     state = state.copyWith(certifications: updatedCertifications);
   }
 
@@ -253,6 +432,48 @@ class CaregiverFormNotifier extends StateNotifier<CaregiverFormState> {
     if (state.certifications.length > 1) {
       final updatedCertifications = List<Certification>.from(state.certifications)..removeAt(index);
       state = state.copyWith(certifications: updatedCertifications);
+    }
+  }
+
+  void updateTraining(int index, Training training, {File? imageFile, Uint8List? imageBytes}) {
+    final updatedTrainings = List<Training>.from(state.trainings);
+    if (index < updatedTrainings.length) {
+      updatedTrainings[index] = Training(
+        name: training.name,
+        issuer: training.issuer,
+        issueDate: training.issueDate != null
+            ? DateTime(training.issueDate!.year, training.issueDate!.month,
+            training.issueDate!.day)
+            : null,
+        expiryDate: training.expiryDate != null
+            ? DateTime(training.expiryDate!.year, training.expiryDate!.month,
+            training.expiryDate!.day)
+            : null,
+        imageUrl: training.imageUrl,
+        imageFile: imageFile ?? training.imageFile,
+        imageBytes: imageBytes ?? training.imageBytes,
+      );
+      state = state.copyWith(trainings: updatedTrainings);
+    }
+  }
+
+  void addTraining() {
+    final updatedTrainings = List<Training>.from(state.trainings)
+      ..add(Training(
+          name: '',
+          issuer: '',
+          issueDate: null,
+          expiryDate: null,
+          imageUrl: '',
+          imageFile: null,
+          imageBytes: null));
+    state = state.copyWith(trainings: updatedTrainings);
+  }
+
+  void removeTraining(int index) {
+    if (state.trainings.length > 1) {
+      final updatedTrainings = List<Training>.from(state.trainings)..removeAt(index);
+      state = state.copyWith(trainings: updatedTrainings);
     }
   }
 
@@ -320,8 +541,68 @@ class CaregiverFormNotifier extends StateNotifier<CaregiverFormState> {
   Future<bool> submitForm() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      final caregiver = state.toModel();
+
+      // Upload personal image
+      String? personalImageUrl = state.imageUrl;
+      if (state.imageFile != null) {
+        personalImageUrl = await _firebaseService.uploadImage(
+          state.imageFile,
+          '${FireBaseEndPoints.caregivers}/${state.email.isEmpty ? DateTime.now().millisecondsSinceEpoch.toString() : state.email}/profile.jpg',
+        );
+      } else if (state.imageBytes != null) {
+        personalImageUrl = await _firebaseService.uploadImage(
+          state.imageBytes,
+          '${FireBaseEndPoints.caregivers}/${state.email.isEmpty ? DateTime.now().millisecondsSinceEpoch.toString() : state.email}/profile.jpg',
+        );
+      }
+      state = state.copyWith(imageUrl: personalImageUrl ?? state.imageUrl);
+
+      // Upload certification images
+      final updatedCertifications = List<Certification>.from(state.certifications);
+      for (int i = 0; i < updatedCertifications.length; i++) {
+        if (updatedCertifications[i].imageFile != null) {
+          final certImageUrl = await _firebaseService.uploadImage(
+            updatedCertifications[i].imageFile,
+            '${FireBaseEndPoints.caregivers}/${state.email}/${FireBaseEndPoints.certifications}/cert_$i.jpg',
+          );
+          updatedCertifications[i] = updatedCertifications[i].copyWith(imageUrl: certImageUrl ?? '');
+        } else if (updatedCertifications[i].imageBytes != null) {
+          final certImageUrl = await _firebaseService.uploadImage(
+            updatedCertifications[i].imageBytes,
+            '${FireBaseEndPoints.caregivers}/${state.email}/${FireBaseEndPoints.certifications}/cert_$i.jpg',
+          );
+          updatedCertifications[i] = updatedCertifications[i].copyWith(imageUrl: certImageUrl ?? '');
+        }
+      }
+
+      // Upload training images
+      final updatedTrainings = List<Training>.from(state.trainings);
+      for (int i = 0; i < updatedTrainings.length; i++) {
+        if (updatedTrainings[i].imageFile != null) {
+          final trainImageUrl = await _firebaseService.uploadImage(
+            updatedTrainings[i].imageFile,
+            '${FireBaseEndPoints.caregivers}/${state.email}/${FireBaseEndPoints.trainings}/train_$i.jpg',
+          );
+          updatedTrainings[i] = updatedTrainings[i].copyWith(imageUrl: trainImageUrl ?? '');
+        } else if (updatedTrainings[i].imageBytes != null) {
+          final trainImageUrl = await _firebaseService.uploadImage(
+            updatedTrainings[i].imageBytes,
+            '${FireBaseEndPoints.caregivers}/${state.email}/${FireBaseEndPoints.trainings}/train_$i.jpg',
+          );
+          updatedTrainings[i] = updatedTrainings[i].copyWith(imageUrl: trainImageUrl ?? '');
+        }
+      }
+
+      // Create caregiver with updated data
+      final caregiver = state.copyWith(
+        imageUrl: personalImageUrl ?? state.imageUrl,
+        certifications: updatedCertifications,
+        trainings: updatedTrainings,
+      ).toModel();
+
+      // Add caregiver to Firestore
       await _addCaregiver(caregiver);
+
       state = CaregiverFormState();
       return true;
     } catch (e) {
@@ -345,14 +626,19 @@ class CaregiverFormNotifier extends StateNotifier<CaregiverFormState> {
 
   void loadCaregiverData(Caregiver caregiver) {
     state = CaregiverFormState(
-      fullName: caregiver.fullName,
+      firstName: caregiver.firstName,
+      lastName: caregiver.lastName,
       email: caregiver.email,
       phone: caregiver.phone,
+      city: caregiver.city,
+      country: caregiver.country,
       address: caregiver.address,
       professionalSummary: caregiver.professionalSummary,
+      imageUrl: caregiver.imageUrl ?? '',
       workHistory: caregiver.workHistory,
       education: caregiver.education,
       certifications: caregiver.certifications,
+      trainings: caregiver.trainings,
       references: caregiver.references,
       softSkills: caregiver.softSkills,
       hardSkills: caregiver.hardSkills,
@@ -362,6 +648,9 @@ class CaregiverFormNotifier extends StateNotifier<CaregiverFormState> {
       hasWorkAuthorization: caregiver.hasWorkAuthorization,
       memberships: caregiver.memberships,
       achievements: caregiver.achievements,
+      birthdate: caregiver.birthdate,
+      gender: caregiver.gender,
+      maritalStatus: caregiver.maritalStatus,
     );
   }
 }
@@ -369,5 +658,6 @@ class CaregiverFormNotifier extends StateNotifier<CaregiverFormState> {
 final caregiverFormProvider = StateNotifierProvider<CaregiverFormNotifier, CaregiverFormState>((ref) {
   final addCaregiver = ref.watch(addCaregiverProvider);
   final updateCaregiver = ref.watch(updateCaregiverProvider);
-  return CaregiverFormNotifier(addCaregiver, updateCaregiver);
+  final firebaseService = ref.watch(firebaseServiceProvider);
+  return CaregiverFormNotifier(addCaregiver, updateCaregiver, firebaseService);
 });

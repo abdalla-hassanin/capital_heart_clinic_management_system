@@ -23,13 +23,18 @@ class _AddCaregiverScreenState extends ConsumerState<AddCaregiverScreen> {
   final _personalInfoFormKey = GlobalKey<FormState>();
   final _workHistoryFormKey = GlobalKey<FormState>();
   final _educationFormKey = GlobalKey<FormState>();
+  final _certificationFormKey = GlobalKey<FormState>();
+  final _trainingFormKey = GlobalKey<FormState>();
   final _referenceFormKey = GlobalKey<FormState>();
   final _skillsFormKey = GlobalKey<FormState>();
   int _currentStep = 0;
 
-  late final TextEditingController _fullNameController;
+  late final TextEditingController _firstNameController;
+  late final TextEditingController _lastNameController;
   late final TextEditingController _phoneController;
   late final TextEditingController _emailController;
+  late final TextEditingController _cityController;
+  late final TextEditingController _countryController;
   late final TextEditingController _addressController;
   late final TextEditingController _professionalSummaryController;
   late final TextEditingController _languageController;
@@ -40,23 +45,35 @@ class _AddCaregiverScreenState extends ConsumerState<AddCaregiverScreen> {
   void initState() {
     super.initState();
     final initialState = ref.read(caregiverFormProvider);
-    _fullNameController = TextEditingController(text: initialState.fullName);
+    _firstNameController = TextEditingController(text: initialState.firstName);
+    _lastNameController = TextEditingController(text: initialState.lastName);
     _phoneController = TextEditingController(text: initialState.phone);
     _emailController = TextEditingController(text: initialState.email);
+    _cityController = TextEditingController(text: initialState.city);
+    _countryController = TextEditingController(text: initialState.country);
     _addressController = TextEditingController(text: initialState.address);
     _professionalSummaryController = TextEditingController(text: initialState.professionalSummary);
     _languageController = TextEditingController(text: initialState.languages);
     _membershipController = TextEditingController(text: initialState.memberships);
     _achievementsController = TextEditingController(text: initialState.achievements);
 
-    _fullNameController.addListener(() {
-      ref.read(caregiverFormProvider.notifier).updatePersonalInfo(fullName: _fullNameController.text);
+    _firstNameController.addListener(() {
+      ref.read(caregiverFormProvider.notifier).updatePersonalInfo(firstName: _firstNameController.text);
+    });
+    _lastNameController.addListener(() {
+      ref.read(caregiverFormProvider.notifier).updatePersonalInfo(lastName: _lastNameController.text);
     });
     _phoneController.addListener(() {
       ref.read(caregiverFormProvider.notifier).updatePersonalInfo(phone: _phoneController.text);
     });
     _emailController.addListener(() {
       ref.read(caregiverFormProvider.notifier).updatePersonalInfo(email: _emailController.text);
+    });
+    _cityController.addListener(() {
+      ref.read(caregiverFormProvider.notifier).updatePersonalInfo(city: _cityController.text);
+    });
+    _countryController.addListener(() {
+      ref.read(caregiverFormProvider.notifier).updatePersonalInfo(country: _countryController.text);
     });
     _addressController.addListener(() {
       ref.read(caregiverFormProvider.notifier).updatePersonalInfo(address: _addressController.text);
@@ -77,9 +94,12 @@ class _AddCaregiverScreenState extends ConsumerState<AddCaregiverScreen> {
 
   @override
   void dispose() {
-    _fullNameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _cityController.dispose();
+    _countryController.dispose();
     _addressController.dispose();
     _professionalSummaryController.dispose();
     _languageController.dispose();
@@ -129,7 +149,7 @@ class _AddCaregiverScreenState extends ConsumerState<AddCaregiverScreen> {
           type: StepperType.vertical,
           currentStep: _currentStep,
           onStepContinue: () async {
-            bool isLastStep = _currentStep == 5;
+            bool isLastStep = _currentStep == 5; // 6 steps total (0-5)
             if (isLastStep) {
               await _submitForm();
             } else {
@@ -146,7 +166,7 @@ class _AddCaregiverScreenState extends ConsumerState<AddCaregiverScreen> {
             }
           },
           onStepCancel: _currentStep > 0 ? () => setState(() => _currentStep -= 1) : null,
-          onStepTapped: null,
+          onStepTapped: null, // Disable tapping to jump steps
           controlsBuilder: (context, details) {
             return Padding(
               padding: const EdgeInsets.only(top: 20),
@@ -155,8 +175,13 @@ class _AddCaregiverScreenState extends ConsumerState<AddCaregiverScreen> {
                   ElevatedButton(
                     onPressed: formState.isLoading ? null : details.onStepContinue,
                     child: formState.isLoading
-                        ? CircularProgressIndicator(
-                      color: theme.colorScheme.onPrimary,
+                        ? SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: theme.colorScheme.onPrimary,
+                        strokeWidth: 2,
+                      ),
                     )
                         : Text(_currentStep == 5 ? localizations.submit : localizations.next),
                   ),
@@ -178,9 +203,12 @@ class _AddCaregiverScreenState extends ConsumerState<AddCaregiverScreen> {
               title: Text(localizations.personal_information),
               content: PersonalInfoForm(
                 personalInfoFormKey: _personalInfoFormKey,
-                fullNameController: _fullNameController,
+                firstNameController: _firstNameController,
+                lastNameController: _lastNameController,
                 phoneController: _phoneController,
                 emailController: _emailController,
+                cityController: _cityController,
+                countryController: _countryController,
                 addressController: _addressController,
                 professionalSummaryController: _professionalSummaryController,
               ),
@@ -199,25 +227,24 @@ class _AddCaregiverScreenState extends ConsumerState<AddCaregiverScreen> {
             ),
             Step(
               title: Text(localizations.education_certifications),
-              content: EducationCertificationForm(educationFormKey: _educationFormKey),
+              content: EducationCertificationForm(
+                educationFormKey: _educationFormKey,
+                certificationFormKey: _certificationFormKey,
+                trainingFormKey: _trainingFormKey,
+              ),
               isActive: _currentStep >= 2,
-              state: _currentStep > 2 && (_educationFormKey.currentState?.validate() ?? false)
-                  ? StepState.complete
-                  : StepState.indexed,
-            ),
-            Step(
-              title: Text(localizations.references_testimonials),
-              content: ReferencesForm(referenceFormKey: _referenceFormKey),
-              isActive: _currentStep >= 3,
-              state: _currentStep > 3 && (_referenceFormKey.currentState?.validate() ?? false)
+              state: _currentStep > 2 &&
+                  (_educationFormKey.currentState?.validate() ?? false) &&
+                  (_certificationFormKey.currentState?.validate() ?? false) &&
+                  (_trainingFormKey.currentState?.validate() ?? false)
                   ? StepState.complete
                   : StepState.indexed,
             ),
             Step(
               title: Text(localizations.skills_competencies),
               content: SkillsForm(skillsFormKey: _skillsFormKey, languageController: _languageController),
-              isActive: _currentStep >= 4,
-              state: _currentStep > 4 && (_skillsFormKey.currentState?.validate() ?? false)
+              isActive: _currentStep >= 3,
+              state: _currentStep > 3 && (_skillsFormKey.currentState?.validate() ?? false)
                   ? StepState.complete
                   : StepState.indexed,
             ),
@@ -227,8 +254,18 @@ class _AddCaregiverScreenState extends ConsumerState<AddCaregiverScreen> {
                 membershipController: _membershipController,
                 achievementsController: _achievementsController,
               ),
+              isActive: _currentStep >= 4,
+              state: _currentStep > 4 && (_formKey.currentState?.validate() ?? false)
+                  ? StepState.complete
+                  : StepState.indexed,
+            ),
+            Step(
+              title: Text(localizations.references_testimonials),
+              content: ReferencesForm(referenceFormKey: _referenceFormKey),
               isActive: _currentStep >= 5,
-              state: _currentStep > 5 ? StepState.complete : StepState.indexed,
+              state: _currentStep == 5 && (_referenceFormKey.currentState?.validate() ?? false)
+                  ? StepState.complete
+                  : StepState.indexed,
             ),
           ],
         ),
@@ -243,11 +280,15 @@ class _AddCaregiverScreenState extends ConsumerState<AddCaregiverScreen> {
       case 1:
         return _workHistoryFormKey.currentState?.validate() ?? false;
       case 2:
-        return _educationFormKey.currentState?.validate() ?? false;
+        return (_educationFormKey.currentState?.validate() ?? false) &&
+            (_certificationFormKey.currentState?.validate() ?? false) &&
+            (_trainingFormKey.currentState?.validate() ?? false);
       case 3:
-        return _referenceFormKey.currentState?.validate() ?? false;
-      case 4:
         return _skillsFormKey.currentState?.validate() ?? false;
+      case 4:
+        return _formKey.currentState?.validate() ?? false;
+      case 5:
+        return _referenceFormKey.currentState?.validate() ?? false;
       default:
         return true;
     }
@@ -257,18 +298,23 @@ class _AddCaregiverScreenState extends ConsumerState<AddCaregiverScreen> {
     return (_personalInfoFormKey.currentState?.validate() ?? false) &&
         (_workHistoryFormKey.currentState?.validate() ?? false) &&
         (_educationFormKey.currentState?.validate() ?? false) &&
-        (_referenceFormKey.currentState?.validate() ?? false) &&
-        (_skillsFormKey.currentState?.validate() ?? false);
+        (_certificationFormKey.currentState?.validate() ?? false) &&
+        (_trainingFormKey.currentState?.validate() ?? false) &&
+        (_skillsFormKey.currentState?.validate() ?? false) &&
+        (_formKey.currentState?.validate() ?? false) && // Documents step
+        (_referenceFormKey.currentState?.validate() ?? false);
   }
 
   Future<void> _submitForm() async {
     final localizations = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+
     if (_validateAllSteps()) {
       final success = await ref.read(caregiverFormProvider.notifier).submitForm();
       if (success && mounted) {
         showDialog(
           context: context,
+          barrierDismissible: false,
           builder: (context) => AlertDialog(
             title: Text(localizations.success),
             content: Text(localizations.caregiver_added_successfully),
@@ -289,30 +335,32 @@ class _AddCaregiverScreenState extends ConsumerState<AddCaregiverScreen> {
           SnackBar(
             content: Text('${localizations.error}: ${error ?? localizations.failed_to_add_caregiver}'),
             backgroundColor: theme.colorScheme.error,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(localizations.please_fill_all_steps),
-            backgroundColor: theme.colorScheme.error,
-          ),
-        );
-        setState(() {
-          _currentStep = _findFirstInvalidStep();
-        });
-      }
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(localizations.please_fill_all_steps),
+          backgroundColor: theme.colorScheme.error,
+        ),
+      );
+      setState(() {
+        _currentStep = _findFirstInvalidStep();
+      });
     }
   }
 
   int _findFirstInvalidStep() {
     if (!(_personalInfoFormKey.currentState?.validate() ?? false)) return 0;
     if (!(_workHistoryFormKey.currentState?.validate() ?? false)) return 1;
-    if (!(_educationFormKey.currentState?.validate() ?? false)) return 2;
-    if (!(_referenceFormKey.currentState?.validate() ?? false)) return 3;
-    if (!(_skillsFormKey.currentState?.validate() ?? false)) return 4;
-    return 5;
+    if (!(_educationFormKey.currentState?.validate() ?? false) ||
+        !(_certificationFormKey.currentState?.validate() ?? false) ||
+        !(_trainingFormKey.currentState?.validate() ?? false)) return 2;
+    if (!(_skillsFormKey.currentState?.validate() ?? false)) return 3;
+    if (!(_formKey.currentState?.validate() ?? false)) return 4; // Documents step
+    if (!(_referenceFormKey.currentState?.validate() ?? false)) return 5;
+    return 5; // Default to last step if all are valid (shouldn't happen)
   }
 }

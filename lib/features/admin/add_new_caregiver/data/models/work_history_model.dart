@@ -1,18 +1,19 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../domain/entities/work_history.dart';
 
 class WorkHistoryModel {
   final String jobTitle;
   final String employer;
-  final String startYear;
-  final String endYear;
+  final DateTime? startDate;
+  final DateTime? endDate;
   final String responsibilities;
 
   WorkHistoryModel({
     required this.jobTitle,
     required this.employer,
-    required this.startYear,
-    required this.endYear,
+    this.startDate,
+    this.endDate,
     required this.responsibilities,
   });
 
@@ -20,8 +21,8 @@ class WorkHistoryModel {
     return WorkHistoryModel(
       jobTitle: map['jobTitle'] ?? '',
       employer: map['employer'] ?? '',
-      startYear: map['startYear'] ?? '',
-      endYear: map['endYear'] ?? '',
+      startDate: (map['startDate'] as Timestamp?)?.toDate(),
+      endDate: (map['endDate'] as Timestamp?)?.toDate(),
       responsibilities: map['responsibilities'] ?? '',
     );
   }
@@ -30,29 +31,25 @@ class WorkHistoryModel {
     return {
       'jobTitle': jobTitle,
       'employer': employer,
-      'startYear': startYear,
-      'endYear': endYear,
+      'startDate': startDate != null ? Timestamp.fromDate(startDate!) : null,
+      'endDate': endDate != null ? Timestamp.fromDate(endDate!) : null,
       'responsibilities': responsibilities,
     };
   }
 
-  WorkHistory toEntity() {
-    return WorkHistory(
-      jobTitle: jobTitle,
-      employer: employer,
-      startYear: startYear,
-      endYear: endYear,
-      responsibilities: responsibilities,
-    );
-  }
+  WorkHistory toEntity() => WorkHistory(
+    jobTitle: jobTitle,
+    employer: employer,
+    startDate: startDate,
+    endDate: endDate,
+    responsibilities: responsibilities,
+  );
 
-  factory WorkHistoryModel.fromEntity(WorkHistory entity) {
-    return WorkHistoryModel(
-      jobTitle: entity.jobTitle,
-      employer: entity.employer,
-      startYear: entity.startYear,
-      endYear: entity.endYear,
-      responsibilities: entity.responsibilities,
-    );
-  }
+  factory WorkHistoryModel.fromEntity(WorkHistory entity) => WorkHistoryModel(
+    jobTitle: entity.jobTitle,
+    employer: entity.employer,
+    startDate: entity.startDate,
+    endDate: entity.endDate,
+    responsibilities: entity.responsibilities,
+  );
 }

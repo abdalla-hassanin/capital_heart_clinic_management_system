@@ -62,6 +62,7 @@ class ReferencesForm extends ConsumerWidget {
                         labelText: localizations.reference_name,
                         border: const OutlineInputBorder(),
                       ),
+                      keyboardType: TextInputType.text,
                       validator: (value) => value?.isEmpty ?? true ? localizations.please_enter_reference_name : null,
                       onChanged: (value) => ref.read(caregiverFormProvider.notifier).updateReference(
                         index,
@@ -81,6 +82,7 @@ class ReferencesForm extends ConsumerWidget {
                         border: const OutlineInputBorder(),
                         hintText: localizations.relationship_hint,
                       ),
+                      keyboardType: TextInputType.text,
                       validator: (value) => value?.isEmpty ?? true ? localizations.please_enter_relationship : null,
                       onChanged: (value) => ref.read(caregiverFormProvider.notifier).updateReference(
                         index,
@@ -100,6 +102,7 @@ class ReferencesForm extends ConsumerWidget {
                         border: const OutlineInputBorder(),
                         hintText: localizations.contact_information_hint,
                       ),
+                      keyboardType: TextInputType.text,
                       validator: (value) => value?.isEmpty ?? true ? localizations.please_enter_contact_information : null,
                       onChanged: (value) => ref.read(caregiverFormProvider.notifier).updateReference(
                         index,
@@ -119,6 +122,7 @@ class ReferencesForm extends ConsumerWidget {
                         border: const OutlineInputBorder(),
                         hintText: localizations.testimonial_hint,
                       ),
+                      keyboardType: TextInputType.multiline,
                       maxLines: 3,
                       onChanged: (value) => ref.read(caregiverFormProvider.notifier).updateReference(
                         index,

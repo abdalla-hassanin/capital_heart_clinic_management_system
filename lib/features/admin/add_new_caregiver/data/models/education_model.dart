@@ -1,22 +1,23 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../domain/entities/education.dart';
 
 class EducationModel {
   final String degree;
   final String institution;
-  final String year;
+  final DateTime? completionDate;
 
   EducationModel({
     required this.degree,
     required this.institution,
-    required this.year,
+    this.completionDate,
   });
 
   factory EducationModel.fromMap(Map<String, dynamic> map) {
     return EducationModel(
       degree: map['degree'] ?? '',
       institution: map['institution'] ?? '',
-      year: map['year'] ?? '',
+      completionDate: (map['completionDate'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -24,23 +25,19 @@ class EducationModel {
     return {
       'degree': degree,
       'institution': institution,
-      'year': year,
+      'completionDate': completionDate != null ? Timestamp.fromDate(completionDate!) : null,
     };
   }
 
-  Education toEntity() {
-    return Education(
-      degree: degree,
-      institution: institution,
-      year: year,
-    );
-  }
+  Education toEntity() => Education(
+    degree: degree,
+    institution: institution,
+    completionDate: completionDate,
+  );
 
-  factory EducationModel.fromEntity(Education entity) {
-    return EducationModel(
-      degree: entity.degree,
-      institution: entity.institution,
-      year: entity.year,
-    );
-  }
+  factory EducationModel.fromEntity(Education entity) => EducationModel(
+    degree: entity.degree,
+    institution: entity.institution,
+    completionDate: entity.completionDate,
+  );
 }

@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-class Certification {
+class Training {
   final String name;
   final String issuer;
   final DateTime? issueDate;
@@ -10,7 +10,7 @@ class Certification {
   final File? imageFile;
   final Uint8List? imageBytes;
 
-  Certification({
+  Training({
     required this.name,
     required this.issuer,
     this.issueDate,
@@ -20,7 +20,7 @@ class Certification {
     this.imageBytes,
   });
 
-  Certification copyWith({
+  Training copyWith({
     String? name,
     String? issuer,
     DateTime? issueDate,
@@ -29,7 +29,7 @@ class Certification {
     File? imageFile,
     Uint8List? imageBytes,
   }) {
-    return Certification(
+    return Training(
       name: name ?? this.name,
       issuer: issuer ?? this.issuer,
       issueDate: issueDate ?? this.issueDate,

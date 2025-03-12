@@ -87,6 +87,7 @@ class SkillsForm extends ConsumerWidget {
               border: const OutlineInputBorder(),
               hintText: localizations.languages_hint,
             ),
+            keyboardType: TextInputType.text,
             validator: (value) => value?.isEmpty ?? true ? localizations.please_enter_language : null,
           ),
           const SizedBox(height: 24),

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../domain/entities/work_history.dart';
 import '../providers/caregiver_providers.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class WorkHistoryForm extends ConsumerWidget {
   final GlobalKey<FormState> workHistoryFormKey;
@@ -27,7 +28,8 @@ class WorkHistoryForm extends ConsumerWidget {
               TextButton.icon(
                 onPressed: () => ref.read(caregiverFormProvider.notifier).addWorkHistory(),
                 icon: Icon(Icons.add_circle, color: theme.colorScheme.primary),
-                label: Text(localizations.add_more, style: TextStyle(color: theme.colorScheme.primary)),
+                label: Text(localizations.add_more,
+                    style: TextStyle(color: theme.colorScheme.primary)),
               ),
             ],
           ),
@@ -47,11 +49,13 @@ class WorkHistoryForm extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('${localizations.work_experience} ${index + 1}', style: theme.textTheme.titleMedium),
+                        Text('${localizations.work_experience} ${index + 1}',
+                            style: theme.textTheme.titleMedium),
                         if (index > 0)
                           IconButton(
                             icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                            onPressed: () => ref.read(caregiverFormProvider.notifier).removeWorkHistory(index),
+                            onPressed: () =>
+                                ref.read(caregiverFormProvider.notifier).removeWorkHistory(index),
                           ),
                       ],
                     ),
@@ -62,14 +66,16 @@ class WorkHistoryForm extends ConsumerWidget {
                         labelText: localizations.job_title,
                         border: const OutlineInputBorder(),
                       ),
-                      validator: (value) => value?.isEmpty ?? true ? localizations.please_enter_job_title : null,
+                        keyboardType: TextInputType.text,
+                      validator: (value) =>
+                      value?.isEmpty ?? true ? localizations.please_enter_job_title : null,
                       onChanged: (value) => ref.read(caregiverFormProvider.notifier).updateWorkHistory(
                         index,
                         WorkHistory(
                           jobTitle: value,
                           employer: job.employer,
-                          startYear: job.startYear,
-                          endYear: job.endYear,
+                          startDate: job.startDate,
+                          endDate: job.endDate,
                           responsibilities: job.responsibilities,
                         ),
                       ),
@@ -81,14 +87,16 @@ class WorkHistoryForm extends ConsumerWidget {
                         labelText: localizations.employer_name,
                         border: const OutlineInputBorder(),
                       ),
-                      validator: (value) => value?.isEmpty ?? true ? localizations.please_enter_employer_name : null,
+                        keyboardType: TextInputType.text,
+                      validator: (value) =>
+                      value?.isEmpty ?? true ? localizations.please_enter_employer_name : null,
                       onChanged: (value) => ref.read(caregiverFormProvider.notifier).updateWorkHistory(
                         index,
                         WorkHistory(
                           jobTitle: job.jobTitle,
                           employer: value,
-                          startYear: job.startYear,
-                          endYear: job.endYear,
+                          startDate: job.startDate,
+                          endDate: job.endDate,
                           responsibilities: job.responsibilities,
                         ),
                       ),
@@ -98,42 +106,81 @@ class WorkHistoryForm extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: TextFormField(
-                            initialValue: job.startYear,
                             decoration: InputDecoration(
-                              labelText: localizations.start_year,
+                              labelText: localizations.start_date,
                               border: const OutlineInputBorder(),
-                            ),
-                            keyboardType: TextInputType.number,
-                            validator: (value) => value?.isEmpty ?? true ? localizations.required : null,
-                            onChanged: (value) => ref.read(caregiverFormProvider.notifier).updateWorkHistory(
-                              index,
-                              WorkHistory(
-                                jobTitle: job.jobTitle,
-                                employer: job.employer,
-                                startYear: value,
-                                endYear: job.endYear,
-                                responsibilities: job.responsibilities,
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.calendar_today),
+                                onPressed: () async {
+                                  final date = await showDatePicker(
+                                    context: context,
+                                    initialDate: job.startDate ?? DateTime.now(),
+                                    firstDate: DateTime(1900),
+                                    lastDate: DateTime.now(),
+                                  );
+                                  if (date != null) {
+                                    ref.read(caregiverFormProvider.notifier).updateWorkHistory(
+                                      index,
+                                      WorkHistory(
+                                        jobTitle: job.jobTitle,
+                                        employer: job.employer,
+                                        startDate:
+                                        DateTime(date.year, date.month, date.day),
+                                        endDate: job.endDate,
+                                        responsibilities: job.responsibilities,
+                                      ),
+                                    );
+                                  }
+                                },
                               ),
                             ),
+                            keyboardType: TextInputType.datetime,
+                            readOnly: true,
+                            controller: TextEditingController(
+                              text: job.startDate != null
+                                  ? DateFormat('yyyy-MM-dd').format(job.startDate!)
+                                  : '',
+                            ),
+                            validator: (value) =>
+                            job.startDate == null ? localizations.required : null,
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextFormField(
-                            initialValue: job.endYear,
                             decoration: InputDecoration(
-                              labelText: localizations.end_year_or_present,
+                              labelText: localizations.end_date_or_present,
                               border: const OutlineInputBorder(),
-                            ),
-                            onChanged: (value) => ref.read(caregiverFormProvider.notifier).updateWorkHistory(
-                              index,
-                              WorkHistory(
-                                jobTitle: job.jobTitle,
-                                employer: job.employer,
-                                startYear: job.startYear,
-                                endYear: value,
-                                responsibilities: job.responsibilities,
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.calendar_today),
+                                onPressed: () async {
+                                  final date = await showDatePicker(
+                                    context: context,
+                                    initialDate: job.endDate ?? DateTime.now(),
+                                    firstDate: DateTime(1900),
+                                    lastDate: DateTime.now(),
+                                  );
+                                  if (date != null) {
+                                    ref.read(caregiverFormProvider.notifier).updateWorkHistory(
+                                      index,
+                                      WorkHistory(
+                                        jobTitle: job.jobTitle,
+                                        employer: job.employer,
+                                        startDate: job.startDate,
+                                        endDate: DateTime(date.year, date.month, date.day),
+                                        responsibilities: job.responsibilities,
+                                      ),
+                                    );
+                                  }
+                                },
                               ),
+                            ),
+                            keyboardType: TextInputType.datetime,
+                            readOnly: true,
+                            controller: TextEditingController(
+                              text: job.endDate != null
+                                  ? DateFormat('yyyy-MM-dd').format(job.endDate!)
+                                  : '',
                             ),
                           ),
                         ),
@@ -147,15 +194,18 @@ class WorkHistoryForm extends ConsumerWidget {
                         border: const OutlineInputBorder(),
                         hintText: localizations.key_responsibilities_hint,
                       ),
+                      keyboardType: TextInputType.multiline,
                       maxLines: 3,
-                      validator: (value) => value?.isEmpty ?? true ? localizations.please_enter_responsibilities : null,
+                      validator: (value) => value?.isEmpty ?? true
+                          ? localizations.please_enter_responsibilities
+                          : null,
                       onChanged: (value) => ref.read(caregiverFormProvider.notifier).updateWorkHistory(
                         index,
                         WorkHistory(
                           jobTitle: job.jobTitle,
                           employer: job.employer,
-                          startYear: job.startYear,
-                          endYear: job.endYear,
+                          startDate: job.startDate,
+                          endDate: job.endDate,
                           responsibilities: value,
                         ),
                       ),

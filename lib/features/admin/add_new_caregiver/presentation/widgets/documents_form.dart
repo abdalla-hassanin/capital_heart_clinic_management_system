@@ -70,6 +70,7 @@ class DocumentsForm extends ConsumerWidget {
             border: const OutlineInputBorder(),
             hintText: localizations.professional_memberships_hint,
           ),
+          keyboardType: TextInputType.text,
         ),
         const SizedBox(height: 12),
         TextFormField(
@@ -79,6 +80,7 @@ class DocumentsForm extends ConsumerWidget {
             border: const OutlineInputBorder(),
             hintText: localizations.awards_achievements_hint,
           ),
+          keyboardType: TextInputType.multiline,
           maxLines: 3,
         ),
       ],

@@ -1,14 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../domain/entities/certification.dart';
 
-class CertificationModel {
+import '../../domain/entities/training.dart';
+
+class TrainingModel {
   final String name;
   final String issuer;
   final DateTime? issueDate;
   final DateTime? expiryDate;
   final String imageUrl;
 
-  CertificationModel({
+  TrainingModel({
     required this.name,
     required this.issuer,
     this.issueDate,
@@ -16,8 +17,8 @@ class CertificationModel {
     required this.imageUrl,
   });
 
-  factory CertificationModel.fromMap(Map<String, dynamic> map) {
-    return CertificationModel(
+  factory TrainingModel.fromMap(Map<String, dynamic> map) {
+    return TrainingModel(
       name: map['name'] ?? '',
       issuer: map['issuer'] ?? '',
       issueDate: (map['issueDate'] as Timestamp?)?.toDate(),
@@ -36,7 +37,7 @@ class CertificationModel {
     };
   }
 
-  Certification toEntity() => Certification(
+  Training toEntity() => Training(
     name: name,
     issuer: issuer,
     issueDate: issueDate,
@@ -44,7 +45,7 @@ class CertificationModel {
     imageUrl: imageUrl,
   );
 
-  factory CertificationModel.fromEntity(Certification entity) => CertificationModel(
+  factory TrainingModel.fromEntity(Training entity) => TrainingModel(
     name: entity.name,
     issuer: entity.issuer,
     issueDate: entity.issueDate,
